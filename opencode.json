@@ -3,7 +3,7 @@
   "instructions": [
     "AGENTS.md",
     "ai-context.md",
-    "ai/spec/",
+    "ai/specs/",
     "ia/rules.md",
     "ia/architecture.md"
   ]
