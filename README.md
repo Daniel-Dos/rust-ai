@@ -16,6 +16,7 @@ Exemplo simples de **NATS Pub/Sub** em Rust, demonstrando comunicação assíncr
 
 - Rust (rustc, cargo)
 - Docker
+- [opencode](https://opencode.ai) (opcional, para Assistance de IA)
 
 ## Instalação
 
@@ -70,6 +71,26 @@ Received: Hello, World!
 ```bash
 cargo test
 ```
+
+## Usando com opencode
+
+Este projeto inclui arquivos de configuração para assistentes de IA (`opencode`):
+
+```bash
+# Iniciar sessão com contexto do projeto
+opencode
+
+# Exemplo de comandos:
+/review           # Revisar código
+/build           # Compilar projeto
+/test            # Executar testes
+```
+
+### Arquivos de configuração
+
+- `AGENTS.md` - Instruções para IA
+- `ai-context.md` - Contexto e arquitetura do projeto
+- `.opencode/skills/` - Skills especializadas
 
 ## Estrutura do Projeto
 
