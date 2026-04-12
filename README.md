@@ -2,7 +2,38 @@
 
 Exemplo simples de **NATS Pub/Sub** em Rust, demonstrando comunicação assíncrona entre processos.
 
-## Como funciona
+## O que é NATS?
+
+**NATS** é um message broker (中间件) leve e de alta performance para comunicação entre serviços.
+
+### Características
+
+- **Pub/Sub**: Publishers enviam mensagens para "subjects", subscribers recebem de subjects
+- **Simples**: Protocolo texto simples, fácil de entender
+- **Performático**: Milhões de mensagens por segundo
+- **Confiável**: Suporta delivery garantido com acknowledgements
+- **Escalável**: Native clustering e streaming
+
+### Conceitos principais
+
+```
+┌──────────────┐     Subject     ┌──────────────┐
+│  Publisher    │ ──────────────>│              │
+└──────────────┘   "pedidos"     │   NATS       │
+                                  │   Server     │
+┌──────────────┐     Subject     │              │
+│  Subscriber  │ <──────────────│              │
+└──────────────┘   "pedidos"     └──────────────┘
+```
+
+| Conceito | Descrição |
+|----------|-----------|
+| **Subject** | Canal de comunicação (ex: `pedidos.novos`) |
+| **Publisher** | Envia mensagens para um subject |
+| **Subscriber** | Recebe mensagens de um subject |
+| **Message** | Payload serializado (JSON, protobuf, etc) |
+
+## Arquitetura do Projeto
 
 ```
 ┌─────────────┐         ┌─────────────┐         ┌─────────────┐
@@ -16,7 +47,6 @@ Exemplo simples de **NATS Pub/Sub** em Rust, demonstrando comunicação assíncr
 
 - Rust (rustc, cargo)
 - Docker
-- [opencode](https://opencode.ai) (opcional, para Assistance de IA)
 
 ## Instalação
 
@@ -36,6 +66,8 @@ cargo build
 ```bash
 docker run --rm -p 4222:4222 nats
 ```
+
+O servidor ficará disponível em `nats://localhost:4222`
 
 ### 2. Executar o Consumer (assina mensagens)
 
@@ -74,22 +106,21 @@ cargo test
 
 ## Usando com opencode
 
-Este projeto inclui arquivos de configuração para assistentes de IA (`opencode`):
+Este projeto inclui arquivos de configuração para assistentes de IA:
 
 ```bash
-# Iniciar sessão com contexto do projeto
+# Iniciar sessão
 opencode
 
-# Exemplo de comandos:
+# Comandos disponíveis:
 /review           # Revisar código
-/build           # Compilar projeto
 /test            # Executar testes
 ```
 
 ### Arquivos de configuração
 
 - `AGENTS.md` - Instruções para IA
-- `ai-context.md` - Contexto e arquitetura do projeto
+- `ai-context.md` - Contexto e arquitetura
 - `.opencode/skills/` - Skills especializadas
 
 ## Estrutura do Projeto
@@ -106,3 +137,8 @@ src/
 - **async-nats**: Cliente NATS assíncrono
 - **serde**: Serialização JSON
 - **tokio**: Runtime assíncrono
+
+## Learn More
+
+- [NATS Documentation](https://docs.nats.io/)
+- [async-nats crate](https://crates.io/crates/async-nats)
