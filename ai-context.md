@@ -72,4 +72,6 @@ struct Event {
 - **NATS**: https://nats.io
 - **async-nats**: https://github.com/nats-io/async-nats
 - **Specs**: `ai/specs/nats-pubsub.md`
+- **Regras de Código**: `ai/rules.md`
+- **Decisões Arquiteturais**: `ai/architecture.md`
 - **Skills**: `.opencode/skills/*`
