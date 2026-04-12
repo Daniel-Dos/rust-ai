@@ -4,7 +4,7 @@ Exemplo simples de **NATS Pub/Sub** em Rust, demonstrando comunicação assíncr
 
 ## O que é NATS?
 
-**NATS** é um message broker (中间件) leve e de alta performance para comunicação entre serviços.
+**NATS** é um message broker leve e de alta performance para comunicação entre serviços.
 
 ### Características
 
@@ -16,14 +16,10 @@ Exemplo simples de **NATS Pub/Sub** em Rust, demonstrando comunicação assíncr
 
 ### Conceitos principais
 
-```
-┌──────────────┐     Subject     ┌──────────────┐
-│  Publisher    │ ──────────────>│              │
-└──────────────┘   "pedidos"     │   NATS       │
-                                  │   Server     │
-┌──────────────┐     Subject     │              │
-│  Subscriber  │ <──────────────│              │
-└──────────────┘   "pedidos"     └──────────────┘
+```mermaid
+graph LR
+    P[Publisher] -->|pedidos.novos| N[NATS Server]
+    S[Subscriber] -->|pedidos.novos| N
 ```
 
 | Conceito | Descrição |
@@ -35,12 +31,32 @@ Exemplo simples de **NATS Pub/Sub** em Rust, demonstrando comunicação assíncr
 
 ## Arquitetura do Projeto
 
+```mermaid
+graph LR
+    A[Producer<br/>producer.rs] -->|JSON| B[NATS Server<br/>localhost:4222]
+    B -->|JSON| C[Consumer<br/>consumer.rs]
+    
+    style A fill:#e1f5ff
+    style B fill:#fff3e0
+    style C fill:#e8f5e9
 ```
-┌─────────────┐         ┌─────────────┐         ┌─────────────┐
-│  Producer   │ ──────> │    NATS     │ ──────> │  Consumer   │
-│  (publica)  │  JSON   │   Server    │  JSON   │  (assina)   │
-└─────────────┘         └─────────────┘         └─────────────┘
-                          demo.events
+
+## Fluxo de Dados
+
+```mermaid
+sequenceDiagram
+    participant P as Producer
+    participant N as NATS Server
+    participant C as Consumer
+
+    P->>N: Connect
+    N-->>P: Connected
+    C->>N: Subscribe "demo.events"
+    N-->>C: Subscribed
+    P->>N: Publish {message: "Hello"}
+    N->>C: Deliver {message: "Hello"}
+    C->>C: Deserialize JSON
+    C->>C: Print: "Received: Hello"
 ```
 
 ## Pré-requisitos
@@ -51,11 +67,8 @@ Exemplo simples de **NATS Pub/Sub** em Rust, demonstrando comunicação assíncr
 ## Instalação
 
 ```bash
-# Clonar o repositório
 git clone https://github.com/Daniel-Dos/rust-ai.git
 cd rust-ai
-
-# Build
 cargo build
 ```
 
