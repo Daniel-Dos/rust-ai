@@ -1,9 +1,11 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "instructions": [
+    "AGENTS.md",
     "ai-context.md",
-    "ai/spec/nats-pubsub.md",
-    "ai/rules.md",
-    "ai/architecture.md"
+    "ai/spec/",
+    "ia/rules.md",
+    "ia/architecture.md"
+
   ]
 }
