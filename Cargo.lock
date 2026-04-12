@@ -746,6 +746,7 @@ version = "0.1.0"
 dependencies = [
  "async-nats",
  "futures-util",
+ "rand",
  "serde",
  "serde_json",
  "tokio",

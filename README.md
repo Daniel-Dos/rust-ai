@@ -85,7 +85,7 @@ O servidor ficará disponível em `nats://localhost:4222`
 ### 2. Executar o Consumer (assina mensagens)
 
 ```bash
-cargo run --bin consumer
+cargo run --bin consumer &
 ```
 
 Output esperado:
@@ -99,6 +99,12 @@ Em outro terminal:
 
 ```bash
 cargo run --bin producer "Hello, World!"
+```
+
+Ou com nomes aleatórios:
+
+```bash
+cargo run --bin producer -- --random
 ```
 
 Output esperado:
@@ -119,22 +125,34 @@ cargo test
 
 ## Usando com opencode
 
-Este projeto inclui arquivos de configuração para assistentes de IA:
+Este projeto inclui comandos personalizados para o OpenCode:
 
 ```bash
 # Iniciar sessão
 opencode
-
-# Comandos disponíveis:
-/review           # Revisar código
-/test            # Executar testes
 ```
+
+### Comandos disponíveis
+
+| Comando | Descrição |
+|---------|------------|
+| `/test` | Executa `cargo test` |
+| `/review` | Executa `cargo clippy` e `cargo fmt --check` |
+| `/run` | Verifica NATS e executa o projeto |
+
+### Como usar
+
+No prompt de chat do OpenCode, digite `/` para ver a lista de comandos disponíveis:
+
+- `/test` - Para rodar os testes
+- `/review` - Para revisar o código (clippy + fmt)
+- `/run` - Para executar o projeto (verifica NATS e inicia consumer)
 
 ### Arquivos de configuração
 
-- `AGENTS.md` - Instruções para IA
-- `ai-context.md` - Contexto e arquitetura
+- `.opencode/commands/` - Comandos personalizados
 - `.opencode/skills/` - Skills especializadas
+- `AGENTS.md` - Instruções para IA
 
 ## Estrutura do Projeto
 

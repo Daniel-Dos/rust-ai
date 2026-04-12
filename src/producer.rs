@@ -1,5 +1,13 @@
+use rand::prelude::*;
+
 const NATS_URL: &str = "nats://localhost:4222";
 const SUBJECT: &str = "demo.events";
+
+const NAMES: &[&str] = &[
+    "Alice", "Bob", "Charlie", "Diana", "Eve", "Frank", "Grace", "Henry", "Iris", "Jack", "Karen",
+    "Leo", "Mia", "Noah", "Olivia", "Peter", "Quinn", "Rose", "Sam", "Tina", "Uma", "Victor",
+    "Wendy", "Xavier", "Yara", "Zack",
+];
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, PartialEq)]
 struct Event {
@@ -39,14 +47,31 @@ mod tests {
     }
 }
 
+fn random_name() -> String {
+    let mut rng = rand::thread_rng();
+    NAMES[rng.gen_range(0..NAMES.len())].to_string()
+}
+
 #[tokio::main]
 async fn main() -> Result<(), async_nats::Error> {
-    let message = std::env::args().nth(1).unwrap_or_else(|| "Hello NATS!".to_string());
-    
+    let message = std::env::args()
+        .nth(1)
+        .map(|arg| {
+            if arg == "--random" {
+                random_name()
+            } else {
+                arg
+            }
+        })
+        .unwrap_or_else(random_name);
+
     let client = async_nats::connect(NATS_URL).await?;
-    let event = Event { message: message.clone() };
-    let payload = serde_json::to_string(&event)
-        .map_err(|e| async_nats::Error::from(std::io::Error::new(std::io::ErrorKind::InvalidData, e)))?;
+    let event = Event {
+        message: message.clone(),
+    };
+    let payload = serde_json::to_string(&event).map_err(|e| {
+        async_nats::Error::from(std::io::Error::new(std::io::ErrorKind::InvalidData, e))
+    })?;
     client.publish(SUBJECT, payload.into()).await?;
     client.flush().await?;
     println!("Published: {}", message);

@@ -40,13 +40,13 @@ async fn main() -> Result<(), async_nats::Error> {
     let mut subscriber = client.subscribe(SUBJECT).await?;
 
     println!("Listening on '{}'...", SUBJECT);
-    
+
     while let Some(message) = subscriber.next().await {
         match serde_json::from_slice::<Event>(&message.payload) {
             Ok(event) => println!("Received: {}", event.message),
             Err(e) => eprintln!("Failed to parse message: {}", e),
         }
     }
-    
+
     Ok(())
 }
