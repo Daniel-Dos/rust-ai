@@ -5,41 +5,46 @@ agent: build
 
 Execute os testes do projeto:
 
-1. Iniciar NATS (se não estiver rodando):
+1. Verificar se NATS está rodando (iniciar se necessário):
 ```bash
 docker ps --filter "name=nats-server" || docker run --rm -d -p 4222:4222 --name nats-server nats
+docker ps --filter "name=nats-server"
 ```
 
-2. Executar producer em background:
+2. Verificar se OpenCode Server está rodando (na porta 4096):
 ```bash
-cargo run --bin producer &
-sleep 2
+curl -s http://localhost:4096/health || echo "OpenCode não está rodando na porta 4096"
 ```
 
-3. Executar consumer em background:
-```bash
-cargo run --bin consumer &
-sleep 2
-```
-
-4. Testar API:
-```bash
-curl -X POST http://localhost:8080/message \
-  -H "Content-Type: application/json" \
-  -d '{"message":"Test from CI!"}'
-```
-
-5. Verificar se o consumer recebeu a mensagem:
-```bash
-# O output deve mostrar "Received: Test from CI!"
-```
-
-6. Executar testes unitários:
+3. Executar cargo test (testes unitários):
 ```bash
 cargo test
 ```
 
-7. Limpar processos:
+4. Executar teste de integração producer/consumer:
 ```bash
-pkill -f "cargo run" || true
+# Iniciar consumer em background
+cargo run --bin consumer &
+CONSUMER_PID=$!
+sleep 2
+
+# Executar producer com mensagem específica
+cargo run --bin producer "Test from CI!"
+
+# Aguardar consumer receber
+sleep 2
+
+# Verificar logs (deve mostrar "Received: Test from CI!")
+
+# Limpar
+kill $CONSUMER_PID 2>/dev/null || true
 ```
+
+5. Verificar resultado esperado:
+```
+Output deve conter:
+- Published to NATS: Test from CI!
+- Received: Test from CI!
+```
+
+IMPORTANTE: Use exatamente "Test from CI!" como mensagem, não invente outras mensagens.
