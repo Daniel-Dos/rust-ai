@@ -130,9 +130,6 @@ impl OpenCodeService {
         guard.clone()
     }
 
-    pub fn is_available(&self) -> bool {
-        self.available
-    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
