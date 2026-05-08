@@ -36,6 +36,19 @@ jobs:
       - name: Start NATS
         run: docker run --rm -d -p 4222:4222 --name nats-server nats
 
+      - name: Install OpenCode
+        run: |
+          curl -sSf https://opencode.ai/install.sh | sh
+          echo "$HOME/.opencode/bin" >> $GITHUB_PATH
+
+      - name: Start OpenCode Server
+        run: opencode serve &
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+
+      - name: Wait for OpenCode
+        run: sleep 5 && curl -s http://localhost:4096/health || echo "OpenCode starting..."
+
       - name: Build
         run: cargo build
 
