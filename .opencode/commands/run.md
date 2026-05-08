@@ -1,13 +1,45 @@
 ---
-description: Executar o projeto NATS Pub/Sub
+description: Executar o projeto NATS Pub/Sub com OpenCode
 agent: build
 ---
 
-Verificar se o NATS Server está rodando. Se não estiver, iniciar:
-`docker run --rm -d -p 4222:4222 --name nats-server nats`
+Execute os testes do projeto:
 
-Executar o Consumer (em outro terminal):
-`cargo run --bin consumer`
+1. Iniciar NATS (se não estiver rodando):
+```bash
+docker ps --filter "name=nats-server" || docker run --rm -d -p 4222:4222 --name nats-server nats
+```
 
-Executar o Producer (em outro terminal):
-`cargo run --bin producer -- --random`
+2. Executar producer em background:
+```bash
+cargo run --bin producer &
+sleep 2
+```
+
+3. Executar consumer em background:
+```bash
+cargo run --bin consumer &
+sleep 2
+```
+
+4. Testar API:
+```bash
+curl -X POST http://localhost:8080/message \
+  -H "Content-Type: application/json" \
+  -d '{"message":"Test from CI!"}'
+```
+
+5. Verificar se o consumer recebeu a mensagem:
+```bash
+# O output deve mostrar "Received: Test from CI!"
+```
+
+6. Executar testes unitários:
+```bash
+cargo test
+```
+
+7. Limpar processos:
+```bash
+pkill -f "cargo run" || true
+```
