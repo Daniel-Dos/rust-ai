@@ -2,7 +2,7 @@
 
 ## Projeto: rust-ai
 
-Exemplo simples de **NATS Pub/Sub** em Rust, demonstrando comunicação assíncrona entre processos.
+Exemplo de **NATS Pub/Sub** em Rust com REST API e integração com OpenCode.
 
 ## Instruções para IA
 
@@ -11,6 +11,7 @@ Exemplo simples de **NATS Pub/Sub** em Rust, demonstrando comunicação assíncr
 - Deve criar testes unitários para novas funcionalidades
 - Executar `cargo test` após alterações
 - Seguir as skills em `.opencode/skills/*`
+- Seguir as specs em `ai/specs/*`
 
 ---
 
@@ -20,14 +21,17 @@ Exemplo simples de **NATS Pub/Sub** em Rust, demonstrando comunicação assíncr
 
 - Rust instalado (`rustc`, `cargo`)
 - Docker para subir o NATS Server
+- OpenCode instalado (`opencode`)
 
-### 2. Subir o NATS Server
+### 2. Subir os Serviços
 
 ```bash
+# Terminal 1: NATS Server
 docker run --rm -p 4222:4222 nats
-```
 
-O NATS estará disponível em `nats://localhost:4222`
+# Terminal 2: OpenCode Server
+opencode serve
+```
 
 ### 3. Executar testes unitários
 
@@ -35,34 +39,58 @@ O NATS estará disponível em `nats://localhost:4222`
 cargo test
 ```
 
-### 4. Executar o Consumer (assina mensagens)
+### 4. Executar o Consumer (assina mensagens do NATS)
 
 ```bash
 cargo run --bin consumer
 ```
 
-Output esperado:
-```
-Listening on 'demo.events'...
-```
-
-### 5. Executar o Producer (publica mensagens)
-
-Em outro terminal:
+### 5. Executar o Producer (REST API + Publica no NATS)
 
 ```bash
-cargo run --bin producer "Hello, World!"
+cargo run --bin producer
 ```
 
-Output esperado:
-```
-Published: Hello, World!
+---
+
+## API Endpoints
+
+### POST /message
+Envia mensagem e publicação no NATS.
+
+```bash
+curl -X POST http://localhost:8080/message \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Olá!"}'
 ```
 
-O consumer receberá e exibirá:
+Resposta:
+```json
+{"message": "Message received successfully"}
 ```
-Received: Hello, World!
+
+### GET /message
+Retorna a última resposta do OpenCode.
+
+```bash
+curl http://localhost:8080/message
 ```
+
+---
+
+## Fluxo de Dados
+
+```
+POST /message ──> OpenCode ──> NATS ──> Consumer
+              (envia)      (resposta)
+```
+
+1. Client envía POST com mensagem
+2. Producer publica no NATS
+3. Producer envía mensagem ao OpenCode
+4. OpenCode retorna resposta
+5. Producer publica resposta no NATS
+6. Consumer recebe e exibe resposta
 
 ---
 
@@ -70,32 +98,24 @@ Received: Hello, World!
 
 ```
 src/
-├── producer.rs    # Publica mensagens no NATS
+├── producer.rs    # REST API + Publica no NATS + OpenCode
 ├── consumer.rs    # Assina mensagens do NATS
-└── main.rs        # Placeholder (não usado)
+└── main.rs      # Placeholder
 ```
 
-## Fluxo de Dados
-
-```
-Producer ── JSON ──> NATS Server ──> Consumer
-                      (demo.events)
-```
-
-1. Producer cria um `Event { message }`
-2. Serializa para JSON com `serde_json`
-3. Publica no subject `demo.events`
-4. Consumer recebe a mensagem
-5. Deserializa e imprime o conteúdo
+---
 
 ## Dependências Principais
 
 - `async-nats`: Cliente NATS assíncrono
 - `serde` + `serde_json`: Serialização JSON
 - `tokio`: Runtime assíncrono
-- `futures-util`: Utilitários para streams
+- `axum`: Framework HTTP
+
+---
 
 ## Skills Disponíveis
 
 - `.opencode/skills/rust-basics/`: Boas práticas em Rust
 - `.opencode/skills/nats-pubsub/`: Padrões NATS pub/sub
+- `.opencode/skills/rest-api/`: Construção de APIs REST

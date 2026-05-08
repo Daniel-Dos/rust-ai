@@ -2,76 +2,88 @@
 
 ## Visão Geral
 
-Este projeto demonstra **pub/sub com NATS** em Rust, um padrão de mensageria onde:
-- **Publisher** envia mensagens para um topic (subject)
-- **Subscriber** recebe todas as mensagens desse topic
-- NATS Server atua como intermediário (message broker)
+Este projeto demonstra **pub/sub com NATS** em Rust integrado com REST API e OpenCode:
+- **Producer** = REST API que recebe POST, envia ao OpenCode e publica no NATS
+- **Consumer** = escuta o NATS e exibe as respostas
+- **NATS Server** = message broker
+- **OpenCode** = processa as mensagens e retorna respostas
 
 ## Arquitetura
 
 ```
-┌─────────────┐         ┌─────────────┐         ┌─────────────┐
-│  Producer   │ ──────> │    NATS     │ ──────> │  Consumer   │
-│  (publica)  │  JSON   │   Server    │  JSON   │  (assina)   │
-└─────────────┘         └─────────────┘         └─────────────┘
-                          demo.events
+┌─────────────┐         ┌─────────────┐         ┌─────────────┐         ┌─────────────┐
+│  REST      │ ──────> │  OpenCode  │ ──────> │    NATS    │ ──────> │  Consumer  │
+│  POST      │         │ (processa) │          │         │           │
+└─────────────┘         └─────────────┘         └─────────────┘         └─────────────┘
+  localhost:8080         localhost:4096        demo.events
 ```
 
 ### Componentes
 
 | Componente | Arquivo | Responsabilidade |
 |------------|---------|------------------|
-| Producer   | `src/producer.rs` | Serializa eventos e publica no NATS |
-| Consumer   | `src/consumer.rs` | Assina subject e deserializa eventos |
-| Event      | struct em ambos | `{ message: String }` serializado como JSON |
+| Producer   | `src/producer.rs` | REST API + Publica no NATS + Chama OpenCode |
+| Consumer   | `src/consumer.rs` | Assina NATS e exibe mensagens |
+| NatsEvent  | struct | `{ message: String }` serializado como JSON |
+
+## Fluxo de Dados
+
+1. Client envía POST `/message` com `{ "message": "Olá!" }`
+2. Producer publica no NATS (para o consumer)
+3. Producer envía mensagem ao OpenCode via POST `/session/:id/message`
+4. OpenCode retorna resposta
+5. Producer publicar resposta no NATS
+6. Consumer recebe e exibe
+
+## API Endpoints
+
+### POST /message
+```json
+{ "message": "Olá!" }
+```
+Retorna:
+```json
+{ "message": "Message received successfully" }
+```
+
+### GET /message
+Retorna a última resposta do OpenCode:
+```json
+{ "message": "resposta do OpenCode" }
+```
 
 ## Estrutura de Arquivos
 
 ```
 rust-ai/
-├── Cargo.toml          # Dependências do projeto
+├── Cargo.toml
 ├── src/
-│   ├── producer.rs      # Binary: publica mensagens
-│   ├── consumer.rs      # Binary: recebe mensagens
-│   └── main.rs          # Placeholder (não usado)
-├── ai/
-│   ├── specs/           # Especificações
-│   │   └── nats-pubsub.md
-│   ├── rules.md         # Regras de código
-│   └── architecture.md  # Decisões arquiteturais
-├── .opencode/skills/    # Skills para assistentes
-└── AGENTS.md            # Este arquivo
+│   ├── producer.rs    # REST API + NATS + OpenCode
+│   ├── consumer.rs  # Escuta NATS
+│   └── main.rs     # Placeholder
+└── AGENTS.md
 ```
 
-## Detalhes de Implementação
+## Implementação
 
 ### Producer
-- Conecta ao NATS em `nats://localhost:4222`
-- Lê mensagem do argumento ou usa default "Hello NATS!"
-- Serializa para JSON
-- Publica no subject `demo.events`
-- Faz `flush()` para garantir entrega
+- POST /message: publica no NATS + chama OpenCode + retorna confirmation
+- GET /message: retorna última resposta do OpenCode
 
 ### Consumer
-- Conecta ao NATS
-- Assina o subject `demo.events`
-- Fica em loop infinito esperando mensagens
-- Desserializa JSON e imprime
+- Conecta ao NATS em `demo.events`
+- Desserializa e exibe mensagens
 
 ### Serialização
 ```rust
-// Event struct compartilhado (definido em ambos arquivos)
 #[derive(Serialize, Deserialize)]
-struct Event {
+struct NatsEvent {
     message: String,
 }
 ```
 
-## Referências e Recursos
+## Referências
 
 - **NATS**: https://nats.io
+- **OpenCode**: https://opencode.ai/docs/pt-br/server/#mensagens
 - **async-nats**: https://github.com/nats-io/async-nats
-- **Specs**: `ai/specs/nats-pubsub.md`
-- **Regras de Código**: `ai/rules.md`
-- **Decisões Arquiteturais**: `ai/architecture.md`
-- **Skills**: `.opencode/skills/*`

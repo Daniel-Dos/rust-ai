@@ -1,0 +1,38 @@
+services:
+  nats:
+    image: nats:latest
+    ports:
+      - "4222:4222"
+    command: ["--max_payload", "8MB"]
+
+  opencode:
+    image: opencodeai/opencode:latest
+    ports:
+      - "4096:4096"
+    volumes:
+      - .:/workspace
+
+  producer:
+    build:
+      context: .
+      dockerfile: src/Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      - nats
+      - opencode
+    environment:
+      - NATS_URL=nats://nats:4222
+      - OPENCODE_URL=http://opencode:4096
+    volumes:
+      - .:/app
+
+  consumer:
+    build:
+      context: .
+      dockerfile: src/Dockerfile
+    command: ["consumer"]
+    depends_on:
+      - nats
+    environment:
+      - NATS_URL=nats://nats:4222
