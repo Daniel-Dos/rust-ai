@@ -16,4 +16,4 @@ Integrar o Producer com o OpenCode para processar mensagens e retornar respostas
 ## Constraints
 - Simples
 - Sem arquitetura complexa
-- Integrado no producer
+- Separado em `opencode_service.rs`

@@ -15,7 +15,7 @@ description: Boas práticas para desenvolvimento de APIs RESTful
 - Retornar códigos de status HTTP apropriados
 - Documentar a API usando OpenAPI ou similar
 ## Rust
-- Usar frameworks mais simples somente para post e get
+- Usar frameworks mais simples somente para post e get 
 - Utilizar serde para serialização/deserialização de JSON
 - Implementar testes para endpoints da API
 
