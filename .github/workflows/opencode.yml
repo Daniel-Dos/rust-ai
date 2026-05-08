@@ -19,7 +19,7 @@ jobs:
       contains(github.event.comment.body, ' /run') ||
       startsWith(github.event.comment.body, '/run')
     runs-on: ubuntu-latest
-    permissions:
+permissions:
       id-token: write
       contents: read
       pull-requests: write
