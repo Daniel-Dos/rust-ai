@@ -11,9 +11,9 @@ docker ps --filter "name=nats-server" || docker run --rm -d -p 4222:4222 --name 
 docker ps --filter "name=nats-server"
 ```
 
-## Step 2: Verificar OpenCode Server
+## Step 2: Verificar OpenCode Server (opcional no CI)
 ```bash
-curl -s http://localhost:4096/health || echo "OpenCode não está rodando"
+curl -s http://localhost:4096/health || echo "OpenCode não está rodando (ok no CI)"
 ```
 
 ## Step 3: Executar testes unitários (OBRIGATÓRIO)
