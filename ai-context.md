@@ -22,7 +22,8 @@ Este projeto demonstra **pub/sub com NATS** em Rust integrado com REST API e Ope
 
 | Componente | Arquivo | Responsabilidade |
 |------------|---------|------------------|
-| Producer   | `src/producer.rs` | REST API + Publica no NATS + Chama OpenCode |
+| Producer   | `src/rest.rs` | REST API + Publica no NATS + Chama OpenCode |
+| OpenCode   | `src/opencode_service.rs` | Lógica OpenCode (sessão, mensagens) |
 | Consumer   | `src/consumer.rs` | Assina NATS e exibe mensagens |
 | NatsEvent  | struct | `{ message: String }` serializado como JSON |
 
@@ -58,9 +59,10 @@ Retorna a última resposta do OpenCode:
 rust-ai/
 ├── Cargo.toml
 ├── src/
-│   ├── producer.rs    # REST API + NATS + OpenCode
-│   ├── consumer.rs  # Escuta NATS
-│   └── main.rs     # Placeholder
+│   ├── producer.rs        # Entry point
+│   ├── rest.rs           # REST API (axum)
+│   ├── opencode_service.rs  # OpenCode service
+│   └── consumer.rs      # Escuta NATS
 └── AGENTS.md
 ```
 

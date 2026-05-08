@@ -33,4 +33,4 @@ Retorna a última resposta do OpenCode.
 ## Constraints
 - Simples
 - Sem autenticação
-- Integrado no producer
+- Separado em `rest.rs`

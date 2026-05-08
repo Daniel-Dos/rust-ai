@@ -1,6 +1,6 @@
 # rust-ai
 
-Exemplo simples de **NATS Pub/Sub** em Rust, demonstrando comunicação assíncrona entre processos.
+Exemplo de **NATS Pub/Sub** em Rust com REST API e integração com OpenCode.
 
 ## O que é NATS?
 
@@ -16,53 +16,75 @@ Exemplo simples de **NATS Pub/Sub** em Rust, demonstrando comunicação assíncr
 
 ### Conceitos principais
 
-```mermaid
-graph LR
-    P[Publisher] -->|pedidos.novos| N[NATS Server]
-    S[Subscriber] -->|pedidos.novos| N
-```
-
 | Conceito | Descrição |
 |----------|-----------|
-| **Subject** | Canal de comunicação (ex: `pedidos.novos`) |
+| **Subject** | Canal de comunicação (ex: `demo.events`) |
 | **Publisher** | Envia mensagens para um subject |
 | **Subscriber** | Recebe mensagens de um subject |
-| **Message** | Payload serializado (JSON, protobuf, etc) |
+| **Message** | Payload serializado (JSON) |
 
 ## Arquitetura do Projeto
 
 ```mermaid
-graph LR
-    A[Producer<br/>producer.rs] -->|JSON| B[NATS Server<br/>localhost:4222]
-    B -->|JSON| C[Consumer<br/>consumer.rs]
+graph TB
+    A[REST Client<br/>POST /message] -->|HTTP| B[Producer<br/>rest.rs]
+    B -->|NATS| C[NATS Server<br/>localhost:4222]
+    C -->|NATS| D[Consumer<br/>consumer.rs]
+    B -->|HTTP| E[OpenCode<br/>localhost:4096]
+    E -->|HTTP| B
+    B -->|NATS| C
     
     style A fill:#e1f5ff
-    style B fill:#fff3e0
-    style C fill:#e8f5e9
+    style B fill:#ffecb3
+    style C fill:#fff3e0
+    style D fill:#e8f5e9
+    style E fill:#f3e5f5
 ```
 
 ## Fluxo de Dados
 
 ```mermaid
 sequenceDiagram
-    participant P as Producer
-    participant N as NATS Server
-    participant C as Consumer
+    participant Client
+    participant REST as rest.rs
+    participant OpenCode
+    participant NATS
+    participant Consumer
 
-    P->>N: Connect
-    N-->>P: Connected
-    C->>N: Subscribe "demo.events"
-    N-->>C: Subscribed
-    P->>N: Publish {message: "Hello"}
-    N->>C: Deliver {message: "Hello"}
-    C->>C: Deserialize JSON
-    C->>C: Print: "Received: Hello"
+    Client->>REST: POST /message {message: "Olá!"}
+    REST->>NATS: Publish {message: "Olá!"}
+    REST->>OpenCode: POST /session/:id/message
+    OpenCode->>REST: Response
+    REST->>NATS: Publish {message: "resposta"}
+    NATS->>Consumer: Deliver {message: "resposta"}
+    Client->>REST: GET /message
+    REST->>Client: {message: "resposta"}
 ```
+
+## Estrutura do Projeto
+
+```
+src/
+├── producer.rs        # Entry point
+├── rest.rs          # REST API (axum)
+├── opencode_service.rs  # OpenCode service
+└── consumer.rs      # Assina mensagens do NATS
+```
+
+### Componentes
+
+| Arquivo | Responsabilidade |
+|--------|------------------|
+| `producer.rs` | Entry point |
+| `rest.rs` | REST API (axum), публиta no NATS |
+| `opencode_service.rs` | Criar sessão, enviar/receber mensagens do OpenCode |
+| `consumer.rs` | Escuta NATS e exibe mensagens |
 
 ## Pré-requisitos
 
 - Rust (rustc, cargo)
 - Docker
+- OpenCode (opcional)
 
 ## Instalação
 
@@ -82,10 +104,29 @@ docker run --rm -p 4222:4222 nats
 
 O servidor ficará disponível em `nats://localhost:4222`
 
-### 2. Executar o Consumer (assina mensagens)
+### 2. (Opcional) Subir o OpenCode Server
 
 ```bash
-cargo run --bin consumer &
+opencode serve --port 4096
+```
+
+### 3. Executar o Producer (REST API)
+
+```bash
+cargo run --bin producer
+```
+
+Output esperado:
+```
+REST API listening on http://0.0.0.0:8080
+```
+
+### 4. Executar o Consumer
+
+Em outro terminal:
+
+```bash
+cargo run --bin consumer
 ```
 
 Output esperado:
@@ -93,28 +134,27 @@ Output esperado:
 Listening on 'demo.events'...
 ```
 
-### 3. Executar o Producer (publica mensagens)
-
-Em outro terminal:
+### 5. Testar via REST API
 
 ```bash
-cargo run --bin producer "Hello, World!"
+curl -X POST http://localhost:8080/message \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Olá!"}'
 ```
 
-Ou com nomes aleatórios:
-
-```bash
-cargo run --bin producer -- --random
-```
-
-Output esperado:
-```
-Published: Hello, World!
+Resposta:
+```json
+{"message": "Message received successfully"}
 ```
 
 O consumer receberá e exibirá:
 ```
-Received: Hello, World!
+Received: Olá!
+```
+
+Recuperar resposta do OpenCode:
+```bash
+curl http://localhost:8080/message
 ```
 
 ## Testes
@@ -123,16 +163,25 @@ Received: Hello, World!
 cargo test
 ```
 
-## Usando com opencode
+## API Endpoints
 
-Este projeto inclui comandos personalizados para o OpenCode:
+### POST /message
+Envia mensagem e publikta no NATS.
 
 ```bash
-# Iniciar sessão
-opencode
+curl -X POST http://localhost:8080/message \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Olá!"}'
 ```
 
-### Comandos disponíveis
+### GET /message
+Retorna a última resposta do OpenCode.
+
+```bash
+curl http://localhost:8080/message
+```
+
+## Comandos OpenCode
 
 | Comando | Descrição |
 |---------|------------|
@@ -140,36 +189,16 @@ opencode
 | `/review` | Executa `cargo clippy` e `cargo fmt --check` |
 | `/run` | Verifica NATS e executa o projeto |
 
-### Como usar
-
-No prompt de chat do OpenCode, digite `/` para ver a lista de comandos disponíveis:
-
-- `/test` - Para rodar os testes
-- `/review` - Para revisar o código (clippy + fmt)
-- `/run` - Para executar o projeto (verifica NATS e inicia consumer)
-
-### Arquivos de configuração
-
-- `.opencode/commands/` - Comandos personalizados
-- `.opencode/skills/` - Skills especializadas
-- `AGENTS.md` - Instruções para IA
-
-## Estrutura do Projeto
-
-```
-src/
-├── producer.rs    # Publica mensagens no NATS
-├── consumer.rs    # Assina mensagens do NATS
-└── main.rs        # Placeholder
-```
-
 ## Tecnologias
 
 - **async-nats**: Cliente NATS assíncrono
+- **axum**: Framework HTTP
 - **serde**: Serialização JSON
 - **tokio**: Runtime assíncrono
+- **reqwest**: Cliente HTTP
 
 ## Learn More
 
 - [NATS Documentation](https://docs.nats.io/)
 - [async-nats crate](https://crates.io/crates/async-nats)
+- [axum](https://docs.rs/axum)

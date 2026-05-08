@@ -30,7 +30,7 @@ Exemplo de **NATS Pub/Sub** em Rust com REST API e integração com OpenCode.
 docker run --rm -p 4222:4222 nats
 
 # Terminal 2: OpenCode Server
-opencode serve
+opencode serve --port 4096
 ```
 
 ### 3. Executar testes unitários
@@ -98,9 +98,10 @@ POST /message ──> OpenCode ──> NATS ──> Consumer
 
 ```
 src/
-├── producer.rs    # REST API + Publica no NATS + OpenCode
-├── consumer.rs    # Assina mensagens do NATS
-└── main.rs      # Placeholder
+├── producer.rs        # Entry point
+├── rest.rs          # REST API (axum)
+├── opencode_service.rs  # OpenCode service
+└── consumer.rs      # Assina mensagens do NATS
 ```
 
 ---

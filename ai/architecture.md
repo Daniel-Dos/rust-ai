@@ -4,9 +4,10 @@
 
 ```
 src/
-  main.rs        # Placeholder
-  producer.rs    # REST API + NATS + OpenCode
-  consumer.rs    # Escuta NATS
+  producer.rs        # Entry point
+  rest.rs            # REST API (axum)
+  opencode_service.rs # OpenCode service
+  consumer.rs       # Escuta NATS
 ```
 
 ## Fluxo
@@ -19,9 +20,12 @@ GET /message ──> retorna última resposta do OpenCode
 
 ## Detalhes
 
-- O `producer.rs` é responsável por:
+- O `rest.rs` é responsável por:
   - REST API (POST/GET /message)
   - Publicar mensagens no NATS
+
+- O `opencode_service.rs` é responsável por:
+  - Criar sessão no OpenCode
   - Enviar mensagens ao OpenCode
   - Receber e publicar respostas no NATS
 
@@ -29,10 +33,9 @@ GET /message ──> retorna última resposta do OpenCode
 
 - Comunicação via NATS (demo.events)
 
-## Componentes Integrados
+## Separação de Responsabilidades
 
-Tudo está integrado no `producer.rs` para manter simples:
-- REST API com axum
-- Cliente NATS
-- Cliente HTTP para OpenCode
-- Gerenciamento de sessão
+Arquitetura limpa seguindo SOLID:
+- `rest.rs`: HTTP handlers (Single Responsibility)
+- `opencode_service.rs`: Lógica OpenCode (Open/Closed)
+- `producer.rs`: Entry point (Dependency Inversion)
