@@ -3,48 +3,44 @@ description: Executar o projeto NATS Pub/Sub com OpenCode
 agent: build
 ---
 
-Execute os testes do projeto:
+Execute os testes completos do projeto. IMPORTANTE: Execute TODOS os passos abaixo na ordem EXATA:
 
-1. Verificar se NATS está rodando (iniciar se necessário):
+## Step 1: Verificar NATS
 ```bash
 docker ps --filter "name=nats-server" || docker run --rm -d -p 4222:4222 --name nats-server nats
 docker ps --filter "name=nats-server"
 ```
 
-2. Verificar se OpenCode Server está rodando (na porta 4096):
+## Step 2: Verificar OpenCode Server (opcional no CI)
 ```bash
-curl -s http://localhost:4096/health || echo "OpenCode não está rodando na porta 4096"
+curl -s http://localhost:4096/health || echo "OpenCode não está rodando (ok no CI)"
 ```
 
-3. Executar cargo test (testes unitários):
+## Step 3: Executar testes unitários (OBRIGATÓRIO)
 ```bash
 cargo test
 ```
+Espere o resultado. Todos os testes devem passar.
 
-4. Executar teste de integração producer/consumer:
+## Step 4: Teste de integração producer/consumer (OBRIGATÓRIO)
+Execute exatamente esta sequência:
 ```bash
-# Iniciar consumer em background
 cargo run --bin consumer &
 CONSUMER_PID=$!
-sleep 2
-
-# Executar producer com mensagem específica
+sleep 3
 cargo run --bin producer "Test from CI!"
-
-# Aguardar consumer receber
 sleep 2
-
-# Verificar logs (deve mostrar "Received: Test from CI!")
-
-# Limpar
 kill $CONSUMER_PID 2>/dev/null || true
 ```
 
-5. Verificar resultado esperado:
-```
-Output deve conter:
-- Published to NATS: Test from CI!
-- Received: Test from CI!
-```
+## Step 5: Verificar output
+O output deve mostrar:
+- `Published to NATS: Test from CI!`
+- `Received: Test from CI!`
 
-IMPORTANTE: Use exatamente "Test from CI!" como mensagem, não invente outras mensagens.
+## Step 6: Resultado esperado
+Retorne um resumo com:
+- Quantidade de testes unitários que passaram
+- Se a mensagem "Test from CI!" foi publicada e recebida corretamente
+
+NÃO invente mensagens diferentes. Use exatamente "Test from CI!"
