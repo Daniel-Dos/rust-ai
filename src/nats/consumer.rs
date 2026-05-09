@@ -15,15 +15,17 @@ mod tests {
     #[test]
     fn test_event_deserialization() {
         let json = r#"{"message":"Hello NATS!"}"#;
-        let event: Event = serde_json::from_str(json).unwrap();
-        assert_eq!(event.message, "Hello NATS!");
+        let event: Result<Event, _> = serde_json::from_str(json);
+        assert!(event.is_ok());
+        assert_eq!(event.unwrap().message, "Hello NATS!");
     }
 
     #[test]
     fn test_event_deserialization_empty_message() {
         let json = r#"{"message":""}"#;
-        let event: Event = serde_json::from_str(json).unwrap();
-        assert_eq!(event.message, "");
+        let event: Result<Event, _> = serde_json::from_str(json);
+        assert!(event.is_ok());
+        assert_eq!(event.unwrap().message, "");
     }
 
     #[test]

@@ -4,6 +4,8 @@ use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
+use crate::nats::producer::{NatsEvent, nats_producer};
+
 const OPENCODE_URL: &str = "http://localhost:4096";
 
 #[derive(Serialize)]
@@ -103,12 +105,22 @@ impl OpenCodeService {
                                         let event = NatsEvent {
                                             message: text_content.to_string(),
                                         };
-                                        let payload = serde_json::to_string(&event).unwrap();
-                                        if let Err(e) = nats_client.publish("demo.events", payload.into()).await {
+                                        let payload = match serde_json::to_string(&event) {
+                                            Ok(p) => p,
+                                            Err(e) => {
+                                                eprintln!("Failed to serialize: {}", e);
+                                                return Ok("Message received successfully".to_string());
+                                            }
+                                        };
+                                        if let Err(e) = nats_producer(nats_client, payload).await {
+                                            eprintln!("Failed to publish to NATS: {}", e);
+                                        }
+                                        if let Err(e) = nats_client.flush().await {
                                             eprintln!("Failed to publish to NATS: {}", e);
                                         }
                                         let mut guard = self.last_response.lock().await;
                                         *guard = text_content.to_string();
+                                        println!("Published to NATS. {}", nats_client.server_info().server_name);
                                         return Ok("Message received successfully".to_string());
                                     }
                                 }
@@ -132,11 +144,6 @@ impl OpenCodeService {
 
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-pub struct NatsEvent {
-    pub message: String,
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -146,8 +153,9 @@ mod tests {
         let event = NatsEvent {
             message: "Hello NATS!".to_string(),
         };
-        let json = serde_json::to_string(&event).unwrap();
-        assert!(json.contains("Hello NATS!"));
+        let json = serde_json::to_string(&event);
+        assert!(json.is_ok());
+        assert!(json.unwrap().contains("Hello NATS!"));
     }
 
     #[test]
@@ -155,8 +163,9 @@ mod tests {
         let event = NatsEvent {
             message: String::new(),
         };
-        let json = serde_json::to_string(&event).unwrap();
-        assert_eq!(json, r#"{"message":""}"#);
+        let json = serde_json::to_string(&event);
+        assert!(json.is_ok());
+        assert_eq!(json.unwrap(), r#"{"message":""}"#);
     }
 
     #[test]
@@ -164,8 +173,11 @@ mod tests {
         let original = NatsEvent {
             message: "Test message".to_string(),
         };
-        let json = serde_json::to_string(&original).unwrap();
-        let decoded: NatsEvent = serde_json::from_str(&json).unwrap();
-        assert_eq!(original, decoded);
+        let json_result = serde_json::to_string(&original);
+        assert!(json_result.is_ok());
+        let json_str = json_result.unwrap();
+        let decoded_result: Result<NatsEvent, _> = serde_json::from_str(&json_str);
+        assert!(decoded_result.is_ok());
+        assert_eq!(original.message, decoded_result.unwrap().message);
     }
 }
