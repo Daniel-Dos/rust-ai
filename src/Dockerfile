@@ -1,5 +1,5 @@
 # Build stage
-FROM rust:1.75 as builder
+FROM rust:1.95 as builder
 
 WORKDIR /app
 
@@ -9,7 +9,7 @@ COPY src ./src
 
 RUN apt-get update && apt-get install -y pkg-config libssl-dev
 
-RUN cargo build --release --bin producer
+RUN cargo build --release --bin main
 RUN cargo build --release --bin consumer
 
 # Runtime stage
@@ -22,9 +22,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-COPY --from=builder /app/target/release/producer /usr/local/bin/producer
+COPY --from=builder /app/target/release/main /usr/local/bin/main
 COPY --from=builder /app/target/release/consumer /usr/local/bin/consumer
 
 EXPOSE 8080
 
-CMD ["producer"]
+CMD ["main"]

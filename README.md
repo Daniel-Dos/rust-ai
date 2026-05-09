@@ -65,20 +65,28 @@ sequenceDiagram
 
 ```
 src/
-├── producer.rs        # Entry point
-├── rest.rs          # REST API (axum)
-├── opencode_service.rs  # OpenCode service
-└── consumer.rs      # Assina mensagens do NATS
+├── main.rs              # Entry point
+├── rest.rs             # Módulo REST
+├── rest/
+│   └── rest_api.rs    # REST API (axum)
+├── service.rs         # Módulo Service
+├── service/
+│   └── opencode_service.rs  # OpenCode service
+├── nats.rs            # Módulo NATS
+├── nats/
+│   ├── producer.rs   # Producer NATS
+│   └── consumer.rs  # Consumer NATS
 ```
 
 ### Componentes
 
 | Arquivo | Responsabilidade |
 |--------|------------------|
-| `producer.rs` | Entry point |
-| `rest.rs` | REST API (axum), публиta no NATS |
-| `opencode_service.rs` | Criar sessão, enviar/receber mensagens do OpenCode |
-| `consumer.rs` | Escuta NATS e exibe mensagens |
+| `main.rs` | Entry point |
+| `rest/rest_api.rs` | REST API (axum), publica no NATS |
+| `service/opencode_service.rs` | Criar sessão, enviar/receber mensagens do OpenCode |
+| `nats/consumer.rs` | Escuta NATS e exibe mensagens |
+| `nats/producer.rs` | Publicar no NATS |
 
 ## Pré-requisitos
 

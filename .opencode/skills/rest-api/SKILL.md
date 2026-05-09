@@ -1,5 +1,5 @@
 ---
-name: rest-api
+name: rest_api-api
 description: Boas práticas para desenvolvimento de APIs RESTful
 ---
 

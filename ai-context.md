@@ -59,10 +59,17 @@ Retorna a última resposta do OpenCode:
 rust-ai/
 ├── Cargo.toml
 ├── src/
-│   ├── producer.rs        # Entry point
-│   ├── rest.rs           # REST API (axum)
-│   ├── opencode_service.rs  # OpenCode service
-│   └── consumer.rs      # Escuta NATS
+│   ├── main.rs              # Entry point
+│   ├── rest.rs             # Módulo REST
+│   ├── rest/
+│   │   └── rest_api.rs    # REST API (axum)
+│   ├── service.rs         # Módulo Service
+│   ├── service/
+│   │   └── opencode_service.rs  # OpenCode service
+│   ├── nats.rs            # Módulo NATS
+│   ├── nats/
+│   │   ├── producer.rs   # Producer NATS
+│   │   └── consumer.rs  # Consumer NATS
 └── AGENTS.md
 ```
 

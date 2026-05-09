@@ -4,10 +4,17 @@
 
 ```
 src/
-  producer.rs        # Entry point
-  rest.rs            # REST API (axum)
-  opencode_service.rs # OpenCode service
-  consumer.rs       # Escuta NATS
+  main.rs              # Entry point
+  rest.rs             # Módulo REST
+  rest/
+    rest_api.rs      # REST API (axum)
+  service.rs         # Módulo Service
+  service/
+    opencode_service.rs  # OpenCode service
+  nats.rs            # Módulo NATS
+  nats/
+    producer.rs    # Producer NATS
+    consumer.rs   # Consumer NATS
 ```
 
 ## Fluxo
@@ -20,22 +27,17 @@ GET /message ──> retorna última resposta do OpenCode
 
 ## Detalhes
 
-- O `rest.rs` é responsável por:
-  - REST API (POST/GET /message)
-  - Publicar mensagens no NATS
-
-- O `opencode_service.rs` é responsável por:
-  - Criar sessão no OpenCode
-  - Enviar mensagens ao OpenCode
-  - Receber e publicar respostas no NATS
-
-- O `consumer.rs` escuta o NATS e exibe as mensagens
+- `main.rs`: Entry point que chama `rest_api::main()`
+- `rest/rest_api.rs`: REST API (POST/GET /message)
+- `service/opencode_service.rs`: Criar sessão, enviar/receber mensagens do OpenCode
+- `nats/producer.rs`: Publicar no NATS
+- `nats/consumer.rs`: Escuta NATS e exibe mensagens
 
 - Comunicação via NATS (demo.events)
 
 ## Separação de Responsabilidades
 
 Arquitetura limpa seguindo SOLID:
-- `rest.rs`: HTTP handlers (Single Responsibility)
-- `opencode_service.rs`: Lógica OpenCode (Open/Closed)
-- `producer.rs`: Entry point (Dependency Inversion)
+- `rest/rest_api.rs`: HTTP handlers (Single Responsibility)
+- `service/opencode_service.rs`: Lógica OpenCode (Open/Closed)
+- `main.rs`: Entry point (Dependency Inversion)
